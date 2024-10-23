@@ -1,0 +1,106 @@
+<app-navbar></app-navbar>
+
+<div class="grid mx-3">
+    <div class="col-12 md:col-12 mt-3">
+        <p-card [header]="'Reporte CASH IN'">
+            <div class="grid pb-5">
+                <div class="md:col-3 col-12">
+                    <label for="desde" class="font-bold block mb-2"> Desde: </label>
+                    <p-calendar [(ngModel)]="desde" placeholder="MM/dd/YYYY" [iconDisplay]="'input'" [showIcon]="true"
+                        inputId="desde" />
+                </div>
+                <div class="md:col-3 col-12">
+                    <label for="hasta" class="font-bold block mb-2"> Hasta: </label>
+                    <p-calendar [(ngModel)]="hasta" placeholder="MM/dd/YYYY" [iconDisplay]="'input'" [showIcon]="true"
+                        inputId="hasta" />
+                </div>
+                <div class="md:col col-12 flex justify-content-end mt-3">
+                    <p-button (click)="showDialog()" severity="primary" label="Cash IN" icon="pi pi-wallet" />
+                    <p-button (click)="search()" class="ml-3" severity="contrast" label="Buscar" icon="pi pi-search" />
+                    <p-button [disabled]="!isButtonsActive" (click)="clearFilters()" class="ml-3" severity="secondary"
+                        label="Limpiar" icon="pi pi-eraser" />
+                    <p-button (click)="downloadExcelReport()" [disabled]="!isButtonsActive" class="ml-3"
+                        severity="success" label="Reporte" icon="pi pi-file-excel" />
+                    <p-button (click)="updateFront()" class="ml-3" severity="warning" icon="pi pi-sync" />
+                </div>
+            </div>
+            <p-table [styleClass]="'p-datatable-sm'" [value]="cashIncomes" [tableStyle]="{ 'min-width': '50rem' }">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Monto</th>
+                        <th>Tipo</th>
+                        <th>Fecha</th>
+                        <th>Hora</th>
+                        <th>Usuario</th>
+                        <th>Asignado a</th>
+                        <th>Sociedad</th>
+                        <th>Balance</th>
+                       <!--  <th>Usuario FF</th>
+                        <th>Sobrante</th>
+                        <th>Faltante</th>
+                        <th>Balance</th> -->
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-cashIncome>
+                    <tr>
+                        <td>S/.{{ cashIncome.monto | number : '1.2-2'}}</td>
+                        <td>{{ cashIncome.tipo }}</td>
+                        <td>{{ cashIncome.fecha_registro.split('T')[0] }}</td>
+                        <td>{{ cashIncome.fecha_registro.split('T')[1] }}</td>
+                        <td>{{ cashIncome.user_id.usuario }}</td>
+                        <td>{{ cashIncome.asignado_a.nombre }} {{ cashIncome.asignado_a.apellidos }}</td>
+                        <td>{{ cashIncome.asignado_a.empresa }}</td>
+                        <td>S/. {{ cashIncome.balance | number : '1.2-2' }}</td>
+                        <!-- <td>{{ cashOutlay.user_id.usuario }}</td>
+                        @if(cashOutlay.money_request_id?.sobrante) {
+                        <td>S/.{{ cashOutlay.money_request_id.sobrante | number : '1.2-2' }}</td>
+                        }@else {
+                        <td class="text-center">-</td>
+                        }
+
+                        @if(cashOutlay.money_request_id?.faltante){
+                        <td>S/.{{ cashOutlay.money_request_id.faltante }}</td>
+                        }@else {
+                        <td class="text-center">-</td>
+                        }
+                        <td>S/.{{ cashOutlay.balance | number : '1.2-2'}}</td> -->
+                    </tr>
+                </ng-template>
+            </p-table>
+
+            @if(!isButtonsActive) {
+            <p-paginator (onPageChange)="onPageChange($event)" [first]="first" [rows]="rows"
+                [totalRecords]="totalRegisters" [showCurrentPageReport]="true" [showPageLinks]="false"
+                [showJumpToPageDropdown]="false"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" />
+            }
+
+        </p-card>
+    </div>
+
+</div>
+
+<p-dialog header="Fondo fijo" [modal]="true" [(visible)]="cashInDialog" [style]="{ width: '25rem' }">
+    <span class="p-text-secondary block mb-5">Ingrese el monto que se está asignando.</span>
+    <div class="flex align-items-center gap-3 mb-3">
+        <label for="monto" class="font-semibold w-6rem">Monto</label>
+        <input pInputText id="monto" class="flex-auto" autocomplete="off" type="number" [(ngModel)]="monto" />
+    </div>
+    <div class="flex align-items-center gap-3 mb-3">
+        <label for="monto" class="font-semibold w-6rem">Para</label>
+        <div class="custom-select-container">
+            <select name="para" class="custom-select" [(ngModel)]="asignadoA">
+                <option value="">Seleccione usuario</option>
+                @for (user of adminUsers; track user) {
+                    <option [value]="user._id">{{ user.nombre }} {{ user.apellidos }} - {{ user.empresa }} - {{ user.sede }}</option>
+                }
+            </select>
+        </div>
+    </div>
+    <div class="flex justify-content-end gap-2">
+        <p-button label="Cancel" severity="secondary" (click)="cashInDialog = false" />
+        <p-button label="Grabar" (click)="saveCashIn()" />
+    </div>
+</p-dialog>
+
+<p-toast></p-toast>

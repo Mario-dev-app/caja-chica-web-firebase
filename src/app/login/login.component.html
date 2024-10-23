@@ -1,0 +1,31 @@
+<div id="fondo-login" class="grid flex align-items-center justify-content-center">
+    <div class="col-11 md:col-3 text-center shadow-4 pl-5 pr-5 pt-3 pb-3 bg-white">
+        <img src="../../assets/logo completo.png" height="40" alt="">
+        <p-divider></p-divider>
+        <h4>Iniciar sesión</h4>
+        <form [formGroup]="loginForm" (ngSubmit)="login()">
+            <p-inputGroup>
+                <p-inputGroupAddon>
+                    <i class="pi pi-user"></i>
+                </p-inputGroupAddon>
+                <input class="p-inputtext-sm" pInputText placeholder="Usuario" formControlName="usuario"/>
+            </p-inputGroup>
+            <p-inputGroup class="mt-3 mb-3">
+                <p-inputGroupAddon>
+                    <i class="pi pi-lock"></i>
+                </p-inputGroupAddon>
+                <input type="{{showPass ? 'text' : 'password'}}" class="p-inputtext-sm" pInputText placeholder="Contraseña" formControlName="password"/>
+            </p-inputGroup>
+            <!-- <div class="flex align-items-center justify-content-center mb-3">
+                <p-checkbox  [binary]="true" inputId="binary"></p-checkbox>
+                <small class="ml-2">Mostrar contraseña</small>
+            </div> -->
+            <p-button [disabled]="isLoading" size="small" type="submit" label="Ingresar"></p-button>
+        </form>
+        @if(isLoading) {
+            <p-progressBar class="m-3" mode="indeterminate" [style]="{'height': '6px'}" />
+        }
+    </div>
+</div>
+
+<p-toast></p-toast>

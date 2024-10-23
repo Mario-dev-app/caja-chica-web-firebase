@@ -1,0 +1,184 @@
+<app-navbar></app-navbar>
+
+<div class="grid mx-3">
+    <div class="col-12 md:col-12 mt-3">
+        <p-card [header]="'Reporte de caja chica'">
+            <div class="grid flex justify-content-end">
+                <div [ngClass]="backgroundColorBalance()" class="col-2 text-white">
+                    <h2 class="text-center">S/.{{ balance | number : '1.2-2'}}</h2>
+                </div>
+            </div>
+            <div class="grid pb-5">
+                <div class="md:col-3 col-12">
+                    <label for="desde" class="font-bold block mb-2"> Desde: </label>
+                    <p-calendar placeholder="MM/dd/YYYY" [(ngModel)]="desde" [iconDisplay]="'input'" [showIcon]="true"
+                        inputId="desde" />
+                </div>
+                <div class="md:col-3 col-12">
+                    <label for="hasta" class="font-bold block mb-2"> Hasta: </label>
+                    <p-calendar placeholder="MM/dd/YYYY" [(ngModel)]="hasta" [iconDisplay]="'input'" [showIcon]="true"
+                        inputId="hasta" />
+                </div>
+                <div class="md:col-2 col-12">
+                    <label for="usuario" class="font-bold block mb-2"> Usuario: </label>
+                    <input type="text" pInputText id="usuario" [(ngModel)]="usuario" />
+                </div>
+                <div class="md:col-4 pt-5 col-12 flex justify-content-end">
+                    <p-button label="Buscar" icon="pi pi-search"  (click)="searchWithFilters()"/>
+                    <p-button [disabled]="!isClearActive" class="ml-3" severity="secondary" label="Limpiar" icon="pi pi-eraser" (click)="clearFilters()" />
+                    <p-button class="ml-3" severity="warning" icon="pi pi-sync" (click)="updateFront()" />
+                </div>
+            </div>
+            <p-table [styleClass]="'p-datatable-sm'" [value]="moneyRequests" [tableStyle]="{ 'min-width': '50rem' }">
+                <ng-template pTemplate="header">
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Nombre</th>
+                        <th>Apellidos</th>
+                        <th>Fecha Reg.</th>
+                        <th>Área</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th>Monto</th>
+                        <th>Detalle</th>
+                        <th>Sobrante</th>
+                        <th>Faltante</th>
+                        <th></th>
+                    </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-moneyReq>
+                    <tr>
+                        <td>{{ moneyReq.user_id.usuario }}</td>
+                        <td>{{ moneyReq.user_id.nombre }}</td>
+                        <td>{{ moneyReq.user_id.apellidos }}</td>
+                        <td>{{ moneyReq.fecha_registro }}</td>
+                        <td>{{ moneyReq.area_id.descripcion }}</td>
+                        
+                        <!-- <td>{{ moneyReq.concepto_id.descripcion }}</td> -->
+                        <td>{{ moneyReq.descripcion }}</td>
+                        <td>{{ moneyReq.estado }}</td>
+                        <td>S/. {{ moneyReq.monto_total | number : '1.2-2'}}</td>
+                        <td class="text-center">
+                            <p-button (click)="showDetails(moneyReq._id)" icon="pi pi-eye" [text]="true" [raised]="true" />
+                        </td>
+                        @if(moneyReq.sobrante) {
+                            <td class="text-center">S/. {{ moneyReq.sobrante | number : '1.2-2'}}</td>
+                        }@else {
+                            <td class="text-center">-</td>
+                        }
+
+                        @if(moneyReq.faltante) {
+                            <td class="text-center">S/. {{ moneyReq.faltante | number : '1.2-2' }}</td>
+                        }@else {
+                            <td class="text-center">-</td>
+                        }
+                        <td>
+                            @if(moneyReq.estado === 'APROBADO') {
+                            <p-button size="small" icon="pi pi-money-bill" [rounded]="true" [text]="true"
+                                severity="success" (click)="payout(moneyReq._id, moneyReq.monto)" />
+                            }
+
+                            @if(moneyReq.estado === 'DESEMBOLSADO') {
+                            <p-button size="small" icon="pi pi-receipt" [rounded]="true" [text]="true" severity="info"
+                                (click)="render(moneyReq._id)" />
+                            }
+
+                            @if(moneyReq.estado === 'RECHAZADO') {
+                            <p-button size="small" icon="pi pi-times" [rounded]="true" [text]="true" severity="danger"
+                                [disabled]="true" />
+                            }
+
+                            @if(moneyReq.estado === 'RENDIDO') {
+                            <p-button size="small" icon="pi pi-lock" [rounded]="true" [text]="true" severity="warning"
+                                [disabled]="true" />
+                            }
+                        </td>
+                    </tr>
+                </ng-template>
+            </p-table>
+
+            @if(showPaginator) {
+                <p-paginator (onPageChange)="onPageChange($event)" [first]="first" [rows]="rows"
+                    [totalRecords]="totalRegistros" [showCurrentPageReport]="true" [showPageLinks]="false"
+                    [showJumpToPageDropdown]="false"
+                    currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" />
+            }
+
+        </p-card>
+    </div>
+
+    <!-- <div class="col-12 md:col-5 mt-3">
+        <p-card [subheader]="'Gráfico'">
+            <div class="card flex justify-content-center">
+                <p-chart type="doughnut" [data]="data" [options]="options"></p-chart>
+            </div>
+        </p-card>
+    </div> -->
+</div>
+
+<p-toast></p-toast>
+<p-confirmDialog />
+<p-dialog header="Registro de sobrante o faltante" [modal]="true" [(visible)]="sobranteFaltanteDialogVisible" [style]="{ width: '25rem' }">
+    <!-- <span class="p-text-secondary block mb-5">Update your information.</span> -->
+    <div class="card flex justify-content-center pb-4">
+        <div class="flex flex-wrap gap-3">
+            <div class="flex align-items-center">
+                <p-radioButton 
+                    name="sobranteFaltante" 
+                    value="SOBRANTE" 
+                    [(ngModel)]="sobranteFaltanteTipo" 
+                    inputId="sobrante" />
+                <label for="sobrante" class="ml-2">
+                    Sobrante
+                </label>
+            </div>
+            
+            <div class="flex align-items-center">
+                <p-radioButton 
+                    name="sobranteFaltante" 
+                    value="FALTANTE" 
+                    [(ngModel)]="sobranteFaltanteTipo" 
+                    inputId="faltante" />
+                <label for="faltante" class="ml-2">
+                    Faltante
+                </label>
+            </div>
+        </div>
+    </div>
+    <div class="flex align-items-center gap-3 mb-3">
+        <label for="monto" class="font-semibold w-6rem">Monto</label>
+        <input [(ngModel)]="sobranteFaltanteMonto" type="number" pInputText id="monto" class="flex-auto" autocomplete="off" />
+    </div>
+    <div class="flex justify-content-end gap-2">
+        <p-button label="Cancelar" severity="secondary" (onClick)="sobranteFaltanteDialogVisible = false" />
+        <p-button label="Guardar" (onClick)="saveSobranteFaltante()" />
+    </div>
+</p-dialog>
+
+<p-dialog header="Confirmación" [modal]="true" [(visible)]="renderDialogVisible" [style]="{ width: '25rem' }">
+    <div class="flex align-items-center mb-4">
+        <i class="pi pi-exclamation-triangle" style="font-size: 1.5rem"></i>
+        <p class="ml-3">¿Hubo sobrante o faltante?</p>
+    </div>
+    <div class="flex justify-content-end gap-2">
+        <p-button label="No" severity="secondary" (click)="renderWithoutSobranteFaltante()"/>
+        <p-button label="Sí" (click)="this.sobranteFaltanteDialogVisible = true; this.renderDialogVisible = false;" />
+    </div>
+</p-dialog>
+
+<p-dialog header="Detalle" [modal]="true" [(visible)]="detailsDialogVisible" [style]="{ width: '25rem' }">
+    <p-table [value]="detailToShow">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Concepto</th>
+                <th>Monto</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-detail>
+            <tr>
+                <td>{{ detail.concepto }}</td>
+                <td>S/. {{ detail.monto | number : '1.2-2' }}</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-dialog>
